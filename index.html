@@ -1,0 +1,859 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>PREDATOR SURFING REPORT</title>
+  <style>
+    :root{
+      --bg:#061826; --panel:#0d2438; --accent:#1ec1c3; --accent2:#ff8a3d; --text:#e6f2ff; --muted:#9fb3c8;
+      --ok:#1ec1c3; --warn:#ffcf5a; --bad:#ff6b6b;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial,sans-serif;
+      color:var(--text); background:linear-gradient(180deg,#03101a 0%, #071c2b 60%, #0a2031 100%);
+      min-height:100vh; position:relative; overflow-x:hidden; padding-bottom:60px;
+    }
+    .waves{
+      position:fixed; inset:0; z-index:-1; opacity:.35; pointer-events:none;
+      background: 
+        linear-gradient(180deg, rgba(6,24,38,0.85) 0%, rgba(7,28,43,0.75) 100%),
+        url('https://images.unsplash.com/photo-1505142468610-359e7d316be0?w=1920&q=80') center/cover no-repeat;
+      filter: brightness(0.7) saturate(1.2);
+    }
+
+    header{
+      padding:28px 16px 8px; text-align:center;
+    }
+    h1{
+      margin:0 0 6px; letter-spacing:.06em; font-weight:800; font-size:clamp(22px,4vw,34px);
+      text-shadow:0 2px 12px rgba(0,0,0,.4);
+    }
+    .tagline{color:var(--muted); font-size:14px}
+
+    .container{ max-width:1180px; margin:18px auto; padding:0 16px 20px }
+
+    .panel{
+      background:linear-gradient(180deg,rgba(13,36,56,.9),rgba(10,32,49,.9));
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:14px; box-shadow:0 10px 30px rgba(0,0,0,.25);
+      padding:16px;
+    }
+
+    .controls{ display:grid; grid-template-columns:1fr auto; gap:12px; align-items:center }
+    .controls .row{ display:grid; grid-template-columns:1fr 1fr; gap:10px }
+    select,button{
+      width:100%; padding:12px 12px; border-radius:10px; border:1px solid rgba(255,255,255,.14);
+      background:#0a1d2c; color:var(--text); outline:none; font-size:14px;
+    }
+    select:focus,button:focus{box-shadow:0 0 0 3px rgba(30,193,195,.25)}
+    button{
+      background:linear-gradient(180deg, var(--accent), #15a9ab);
+      border:none; font-weight:700; letter-spacing:.02em; cursor:pointer;
+    }
+    button:hover{ filter:brightness(1.05) }
+    button.secondary{
+      background:linear-gradient(180deg,#2a3a4b,#1b2a38); border:1px solid rgba(255,255,255,.12); font-weight:600;
+    }
+
+    .meta{
+      display:flex; flex-wrap:wrap; gap:10px; margin-top:10px; color:var(--muted); font-size:13px;
+    }
+    .meta .chip{
+      padding:6px 10px; background:#0a1d2c; border:1px solid rgba(255,255,255,.08); border-radius:999px;
+    }
+
+    .table-wrap{
+      margin-top:16px; overflow-x:auto; -webkit-overflow-scrolling:touch; border:1px solid rgba(255,255,255,.08); border-radius:12px;
+    }
+    table{
+      width:100%; border-collapse:separate; border-spacing:0; min-width:100%;
+      background:#071c2b; font-size:13px;
+    }
+    thead th{
+      position:sticky; top:0; background:#0e2b40; color:#dff6ff; text-align:left; padding:10px 8px;
+      font-size:12px; border-bottom:1px solid rgba(255,255,255,.12); z-index:1; white-space:nowrap;
+    }
+    tbody td{
+      padding:10px 8px; border-bottom:1px dashed rgba(255,255,255,.08); color:#e9f4ff; font-size:12px;
+      word-break:break-word; max-width:200px; overflow:hidden; text-overflow:ellipsis;
+    }
+    tbody tr:hover{ background:rgba(30,193,195,.07) }
+    .quality{ font-weight:700; padding:4px 8px; border-radius:8px; display:inline-block }
+    .q-good{ background:rgba(30,193,195,.15); color:#7ff6f7; border:1px solid rgba(30,193,195,.35) }
+    .q-ok{ background:rgba(255,207,90,.12); color:#ffe089; border:1px solid rgba(255,207,90,.3) }
+    .q-bad{ background:rgba(255,107,107,.12); color:#ff9a9a; border:1px solid rgba(255,107,107,.3) }
+    
+    .fav-btn{
+      cursor:pointer; padding:6px 10px; border-radius:8px; background:rgba(255,255,255,.08);
+      border:2px solid rgba(255,207,90,.3); transition:all .3s; font-size:18px;
+      box-shadow:0 2px 8px rgba(255,207,90,.15);
+    }
+    .fav-btn:hover{ background:rgba(255,207,90,.15); transform:scale(1.1); box-shadow:0 4px 12px rgba(255,207,90,.3) }
+    .fav-btn.active{ background:rgba(255,207,90,.3); border-color:rgba(255,207,90,.6); box-shadow:0 4px 16px rgba(255,207,90,.4) }
+
+    .webcam-section{
+      margin-top:24px; padding:18px; background:linear-gradient(180deg,rgba(13,36,56,.9),rgba(10,32,49,.9));
+      border:1px solid rgba(255,255,255,.08); border-radius:14px; text-align:center;
+    }
+    .webcam-btn{
+      display:inline-block; padding:14px 28px; background:linear-gradient(180deg, var(--accent), #15a9ab);
+      color:var(--text); text-decoration:none; border-radius:10px; font-weight:700;
+      font-size:15px; transition:all .2s; border:none; cursor:pointer;
+    }
+    .webcam-btn:hover{ filter:brightness(1.1); transform:translateY(-2px); box-shadow:0 4px 12px rgba(30,193,195,.3) }
+
+    .wct-section{
+      margin-top:32px; padding:16px; background:linear-gradient(180deg,rgba(13,36,56,.75),rgba(10,32,49,.75));
+      border:1px solid rgba(255,255,255,.06); border-radius:12px;
+    }
+    .wct-section h2{
+      color:#9ee7e8; margin:0 0 12px; font-size:1.1em; text-align:center; font-weight:600;
+    }
+    .wct-grid{
+      display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:14px;
+    }
+    .wct-category{
+      background:rgba(10,32,49,.5); border:1px solid rgba(30,193,195,.15); border-radius:10px; padding:12px;
+    }
+    .wct-category h3{
+      color:#1ec1c3; font-size:0.95em; margin:0 0 10px; text-align:center; border-bottom:1px solid rgba(30,193,195,.2); padding-bottom:6px; font-weight:600;
+    }
+    .wct-list{
+      list-style:none; padding:0; margin:0;
+    }
+    .wct-list li{
+      display:flex; align-items:center; gap:8px; padding:8px; margin-bottom:6px;
+      background:rgba(255,255,255,.03); border-radius:6px; transition:background .2s;
+    }
+    .wct-list li:hover{ background:rgba(30,193,195,.08) }
+    .wct-position{
+      width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+      font-weight:700; font-size:0.85em; flex-shrink:0;
+    }
+    .wct-position.gold{ background:linear-gradient(135deg,#FFD700,#FFA500); color:#000 }
+    .wct-position.silver{ background:linear-gradient(135deg,#C0C0C0,#808080); color:#000 }
+    .wct-position.bronze{ background:linear-gradient(135deg,#CD7F32,#8B4513); color:#fff }
+    .wct-position.other{ background:rgba(30,193,195,.2); color:#9ee7e8 }
+    .wct-athlete{ flex:1; min-width:0 }
+    .wct-name{ font-weight:600; color:#e9f4ff; font-size:.82em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+    .wct-country{ color:var(--muted); font-size:.72em }
+    .wct-points{ font-weight:600; color:#ffcf5a; font-size:.78em; flex-shrink:0 }
+
+    .models-section{
+      margin-top:24px; padding:18px; background:linear-gradient(180deg,rgba(13,36,56,.9),rgba(10,32,49,.9));
+      border:1px solid rgba(255,255,255,.08); border-radius:14px;
+    }
+    .models-section h2{
+      color:#9ee7e8; margin:0 0 16px; font-size:1.4em; text-align:center; font-weight:700;
+    }
+    .models-grid{
+      display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:16px;
+    }
+    .model-card{
+      background:rgba(10,32,49,.7); border:1px solid rgba(30,193,195,.2); border-radius:12px; padding:14px; overflow:hidden;
+    }
+    .model-card h3{
+      color:#1ec1c3; font-size:1em; margin:0 0 10px; font-weight:600; display:flex; align-items:center; gap:8px;
+    }
+    .model-embed{
+      width:100%; height:400px; border-radius:8px; border:1px solid rgba(255,255,255,.1);
+    }
+
+    .site-footer{
+      position:fixed; bottom:0; left:0; right:0; background:rgba(7,28,43,.95); 
+      border-top:1px solid rgba(255,255,255,.08); padding:12px 16px; z-index:100;
+      backdrop-filter:blur(10px);
+    }
+    .footer-content{
+      max-width:1180px; margin:0 auto; display:flex; justify-content:space-between; 
+      align-items:center; flex-wrap:wrap; gap:10px; font-size:11px; color:var(--muted);
+    }
+    .footer-left{ display:flex; align-items:center; gap:16px }
+    .footer-brand{ color:#9ee7e8; font-weight:600 }
+    .footer-author{ color:var(--muted) }
+    .footer-contact{ color:var(--accent); text-decoration:none }
+    .footer-contact:hover{ text-decoration:underline }
+    .footer-visits{ color:#ffcf5a; font-weight:600 }
+
+    @media (max-width:740px){
+      .controls{ grid-template-columns:1fr }
+      .controls .row{ grid-template-columns:1fr }
+      .wct-grid{ grid-template-columns:1fr }
+      .models-grid{ grid-template-columns:1fr }
+      .model-embed{ height:300px }
+      table{ font-size:11px }
+      thead th{ padding:8px 6px; font-size:11px }
+      tbody td{ padding:8px 6px; font-size:11px; max-width:150px }
+      .quality{ font-size:10px; padding:3px 6px }
+      .footer-content{ font-size:10px; flex-direction:column; align-items:flex-start }
+      .footer-left{ flex-direction:column; align-items:flex-start; gap:8px }
+    }
+  </style>
+</head>
+<body>
+  <div class="waves"></div>
+  <header>
+    <h1>PREDATOR SURFING REPORT</h1>
+    <div class="tagline">Predicción unificada por comunidad autónoma: spots, altura, periodo y mejor hora</div>
+  </header>
+
+  <main class="container">
+    <section class="panel">
+      <div class="controls">
+        <div class="row">
+          <select id="ccaa">
+            <option value="" selected>Elige comunidad autónoma</option>
+            <option>Andalucía</option>
+            <option>Principado de Asturias</option>
+            <option>Cantabria</option>
+            <option>País Vasco</option>
+            <option>Cataluña</option>
+            <option>Comunitat Valenciana</option>
+            <option>Región de Murcia</option>
+            <option>Galicia</option>
+            <option>Illes Balears</option>
+            <option>Canarias</option>
+            <option>Ceuta</option>
+            <option>Melilla</option>
+          </select>
+          <button id="go">Analizar</button>
+        </div>
+        <button id="reset" class="secondary">Limpiar</button>
+      </div>
+
+      <div class="meta" id="meta">
+        <div class="chip">🌊 Open-Meteo · ⭐ StormGlass · 📡 Multi-fuente</div>
+        <div class="chip" id="moon">Luna: —</div>
+        <div class="chip" id="updated">Actualizado: —</div>
+      </div>
+
+      <div class="hero-image" id="heroImage">
+        <img src="https://images.unsplash.com/photo-1502680390469-be75c86b636f?w=1200&q=80" alt="Surfista en tubo" style="width:100%; height:280px; object-fit:cover; border-radius:12px; margin-top:16px; box-shadow:0 8px 24px rgba(0,0,0,.3);">
+      </div>
+
+      <div class="favorites-section" id="favoritesSection" style="display:none; margin-top:20px; padding:16px; background:linear-gradient(180deg,rgba(255,207,90,.08),rgba(255,138,61,.06)); border:2px solid rgba(255,207,90,.3); border-radius:12px; box-shadow:0 4px 16px rgba(255,207,90,.2);">
+        <h3 style="color:#ffcf5a; font-size:1.3em; margin:0 0 14px; font-weight:700; text-shadow:0 2px 4px rgba(0,0,0,.3);">⭐ TUS SPOTS FAVORITOS</h3>
+        <div class="table-wrap">
+          <table id="favoritesTable">
+            <thead>
+              <tr>
+                <th>⭐</th>
+                <th>Playa / Spot</th>
+                <th>Altura (m)</th>
+                <th>Periodo (s)</th>
+                <th>Mejor hora</th>
+                <th>Calidad</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="table-wrap" id="resultsWrap" hidden>
+        <table id="results">
+          <thead>
+            <tr>
+              <th>⭐</th>
+              <th>Playa / Spot</th>
+              <th>Altura (m)</th>
+              <th>Periodo (s)</th>
+              <th>Mejor hora</th>
+              <th>Calidad</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="webcam-section" id="webcamSection" style="display:none;">
+        <a href="https://www.servigroup.com/es/hotel-galua-la-manga-del-mar-menor/webcam-la-manga/" target="_blank" rel="noopener noreferrer" class="webcam-btn">
+          📹 Ver Webcam Galúa
+        </a>
+      </div>
+
+      <div class="models-section" id="modelsSection" style="display:none;">
+        <h2>📊 Modelos Meteorológicos en Tiempo Real</h2>
+        <div class="models-grid">
+          <div class="model-card">
+            <h3>🌊 Oleaje - Windy</h3>
+            <iframe id="windyWaves" class="model-embed" src="" frameborder="0"></iframe>
+          </div>
+          <div class="model-card">
+            <h3>💨 Viento - Windy</h3>
+            <iframe id="windyWind" class="model-embed" src="" frameborder="0"></iframe>
+          </div>
+          <div class="model-card">
+            <h3>📊 Forecast - Windy</h3>
+            <iframe id="windyForecast" class="model-embed" src="" frameborder="0"></iframe>
+          </div>
+        </div>
+      </div>
+
+      <div class="wct-section">
+        <h2>🏆 Resultados Circuito Mundial</h2>
+        <div class="wct-grid">
+          <div class="wct-category">
+            <h3>🏄 WSL Championship Tour (Surf)</h3>
+            <ul class="wct-list">
+              <li>
+                <span class="wct-position gold">1</span>
+                <div class="wct-athlete">
+                  <div class="wct-name">John John Florence</div>
+                  <div class="wct-country">🇺🇸 Estados Unidos</div>
+                </div>
+                <span class="wct-points">68,420 pts</span>
+              </li>
+              <li>
+                <span class="wct-position silver">2</span>
+                <div class="wct-athlete">
+                  <div class="wct-name">Filipe Toledo</div>
+                  <div class="wct-country">🇧🇷 Brasil</div>
+                </div>
+                <span class="wct-points">65,310 pts</span>
+              </li>
+              <li>
+                <span class="wct-position bronze">3</span>
+                <div class="wct-athlete">
+                  <div class="wct-name">Ethan Ewing</div>
+                  <div class="wct-country">🇦🇺 Australia</div>
+                </div>
+                <span class="wct-points">62,890 pts</span>
+              </li>
+              <li>
+                <span class="wct-position other">4</span>
+                <div class="wct-athlete">
+                  <div class="wct-name">Griffin Colapinto</div>
+                  <div class="wct-country">🇺🇸 Estados Unidos</div>
+                </div>
+                <span class="wct-points">59,740 pts</span>
+              </li>
+              <li>
+                <span class="wct-position other">5</span>
+                <div class="wct-athlete">
+                  <div class="wct-name">Jack Robinson</div>
+                  <div class="wct-country">🇦🇺 Australia</div>
+                </div>
+                <span class="wct-points">57,230 pts</span>
+              </li>
+            </ul>
+          </div>
+
+          <div class="wct-category">
+            <h3>🌊 APB World Tour (Bodyboard)</h3>
+            <ul class="wct-list">
+              <li>
+                <span class="wct-position gold">1</span>
+                <div class="wct-athlete">
+                  <div class="wct-name">Iain Campbell</div>
+                  <div class="wct-country">🇿🇦 Sudáfrica</div>
+                </div>
+                <span class="wct-points">4,850 pts</span>
+              </li>
+              <li>
+                <span class="wct-position silver">2</span>
+                <div class="wct-athlete">
+                  <div class="wct-name">Tristan Roberts</div>
+                  <div class="wct-country">🇿🇦 Sudáfrica</div>
+                </div>
+                <span class="wct-points">4,620 pts</span>
+              </li>
+              <li>
+                <span class="wct-position bronze">3</span>
+                <div class="wct-athlete">
+                  <div class="wct-name">Pierre-Louis Costes</div>
+                  <div class="wct-country">🇫🇷 Francia</div>
+                </div>
+                <span class="wct-points">4,390 pts</span>
+              </li>
+              <li>
+                <span class="wct-position other">4</span>
+                <div class="wct-athlete">
+                  <div class="wct-name">Jared Houston</div>
+                  <div class="wct-country">🇿🇦 Sudáfrica</div>
+                </div>
+                <span class="wct-points">4,115 pts</span>
+              </li>
+              <li>
+                <span class="wct-position other">5</span>
+                <div class="wct-athlete">
+                  <div class="wct-name">João Pessoa</div>
+                  <div class="wct-country">🇧🇷 Brasil</div>
+                </div>
+                <span class="wct-points">3,870 pts</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-content">
+      <div class="footer-left">
+        <span class="footer-brand">Predator Surf</span>
+        <span class="footer-author">Realizado por Jacobo Vale Martínez</span>
+        <a href="mailto:garavide@hotmail.com" class="footer-contact">Contacto: garavide@hotmail.com</a>
+      </div>
+      <div>Visitas: <span class="footer-visits" id="visits">—</span></div>
+    </div>
+  </footer>
+
+  <script>
+    (function(){
+      const k='predator_visits';
+      const n = (parseInt(localStorage.getItem(k)||'0',10)+1);
+      localStorage.setItem(k,String(n));
+      document.getElementById('visits').textContent = n.toLocaleString('es-ES');
+    })();
+
+    const FAVS_KEY = 'predator_favs';
+    function getFavorites() {
+      return JSON.parse(localStorage.getItem(FAVS_KEY) || '[]');
+    }
+    function toggleFavorite(spotName) {
+      let favs = getFavorites();
+      const idx = favs.indexOf(spotName);
+      if(idx > -1) {
+        favs.splice(idx, 1);
+      } else {
+        favs.push(spotName);
+      }
+      localStorage.setItem(FAVS_KEY, JSON.stringify(favs));
+    }
+    function isFavorite(spotName) {
+      return getFavorites().includes(spotName);
+    }
+
+    const SPOTS = {
+      "Región de Murcia": [
+        { name:"Playa de las Amoladeras (La Manga)", lat:37.639685, lon:-0.711587 },
+        { name:"Playa de Galúa (La Manga)", lat:37.6349, lon:-0.7337 },
+        { name:"Calblanque (Parque Regional)", lat:37.5705, lon:-0.7728 },
+        { name:"Playa del Lastre (Portmán)", lat:37.5751, lon:-0.8430 },
+        { name:"Playa de Calnegre (Lorca)", lat:37.4321, lon:-1.5642 },
+        { name:"Playa de Mazarrón", lat:37.5969, lon:-1.3164 }
+      ],
+      "Galicia": [
+        { name:"Pantín (Valdoviño)", lat:43.6813, lon:-8.1150 },
+        { name:"Doniños (Ferrol)", lat:43.5025, lon:-8.3076 },
+        { name:"Razo (Carballo)", lat:43.3112, lon:-8.6883 },
+        { name:"Sabón (Arteixo)", lat:43.3428, lon:-8.4521 },
+        { name:"Bastiagueiro (Oleiros)", lat:43.3682, lon:-8.3192 },
+        { name:"Orzán (A Coruña)", lat:43.3713, lon:-8.4102 },
+        { name:"El Vilar (Ribeira)", lat:42.5589, lon:-9.0322 },
+        { name:"La Lanzada (Sanxenxo)", lat:42.4456, lon:-8.8717 },
+        { name:"Patos (Nigrán)", lat:42.1234, lon:-8.8156 },
+        { name:"Barra (Cangas)", lat:42.2612, lon:-8.7889 },
+        { name:"Covas (Viveiro)", lat:43.6589, lon:-7.5934 }
+      ],
+      "Principado de Asturias": [
+        { name:"Salinas (Castrillón)", lat:43.5804, lon:-5.9638 },
+        { name:"Rodiles (Villaviciosa)", lat:43.5115, lon:-5.3391 },
+        { name:"Torimbia (Llanes)", lat:43.4401, lon:-4.8615 },
+        { name:"San Lorenzo (Gijón)", lat:43.5449, lon:-5.6640 },
+        { name:"Xagó (Gozón)", lat:43.6012, lon:-5.9456 },
+        { name:"La Espasa (Castrillón)", lat:43.5789, lon:-6.0123 },
+        { name:"Tapia (Tapia de Casariego)", lat:43.5654, lon:-6.9512 },
+        { name:"Otur (Valdés)", lat:43.5234, lon:-6.6789 },
+        { name:"Cueva (Valdés)", lat:43.5567, lon:-6.6234 },
+        { name:"Xivares (Caravia)", lat:43.4789, lon:-5.1456 }
+      ],
+      "Cantabria": [
+        { name:"Somo (Ribamontán al Mar)", lat:43.4520, lon:-3.7498 },
+        { name:"Liencres (Piélagos)", lat:43.4577, lon:-3.9675 },
+        { name:"Los Locos (Suances)", lat:43.4427, lon:-4.0415 },
+        { name:"Berria (Santoña)", lat:43.4456, lon:-3.4234 },
+        { name:"La Salvé (Laredo)", lat:43.4123, lon:-3.4567 },
+        { name:"Langre (Ribamontán al Mar)", lat:43.4689, lon:-3.7123 },
+        { name:"Merón (San Vicente)", lat:43.3889, lon:-4.4012 },
+        { name:"Oyambre (Valdáliga)", lat:43.3567, lon:-4.4456 },
+        { name:"Gerra (San Vicente)", lat:43.3745, lon:-4.3890 },
+        { name:"Usgo (San Vicente)", lat:43.3856, lon:-4.4167 }
+      ],
+      "País Vasco": [
+        { name:"Zarautz (Gipuzkoa)", lat:43.2870, lon:-2.1699 },
+        { name:"Mundaka (Bizkaia)", lat:43.4085, lon:-2.6977 },
+        { name:"Sopelana (Bizkaia)", lat:43.3830, lon:-2.9844 },
+        { name:"Zurriola (Donostia)", lat:43.3256, lon:-1.9781 },
+        { name:"Meñakoz (Sopela)", lat:43.3789, lon:-2.9912 },
+        { name:"Itzurun (Zumaia)", lat:43.2989, lon:-2.2512 },
+        { name:"Arrigunaga (Getxo)", lat:43.3645, lon:-3.0123 },
+        { name:"Bakio (Bizkaia)", lat:43.4289, lon:-2.8067 },
+        { name:"Barinatxe (Sopela)", lat:43.3867, lon:-2.9789 },
+        { name:"Hondarribia (Gipuzkoa)", lat:43.3734, lon:-1.7912 }
+      ],
+      "Cataluña": [
+        { name:"Barceloneta (Barcelona)", lat:41.3795, lon:2.1892 },
+        { name:"Castelldefels (Barcelona)", lat:41.2666, lon:1.9726 },
+        { name:"Sant Pere Pescador (Girona)", lat:42.1906, lon:3.1053 },
+        { name:"El Masnou (Maresme)", lat:41.4823, lon:2.3145 },
+        { name:"Sitges (Garraf)", lat:41.2345, lon:1.8067 },
+        { name:"Canet de Mar (Maresme)", lat:41.5912, lon:2.5789 },
+        { name:"L'Estartit (Girona)", lat:42.0534, lon:3.1978 },
+        { name:"Roses (Girona)", lat:42.2623, lon:3.1756 }
+      ],
+      "Comunitat Valenciana": [
+        { name:"El Saler (València)", lat:39.3900, lon:-0.3270 },
+        { name:"El Dosel (Cullera)", lat:39.1756, lon:-0.2321 },
+        { name:"El Arenal (Castelló)", lat:39.9710, lon:-0.0259 },
+        { name:"Gandia (València)", lat:38.9989, lon:-0.1634 },
+        { name:"Denia (Alacant)", lat:38.8412, lon:0.1056 },
+        { name:"Playa Norte (Peñíscola)", lat:40.3623, lon:0.4089 }
+      ],
+      "Andalucía": [
+        { name:"El Palmar (Cádiz)", lat:36.2399, lon:-6.0536 },
+        { name:"Yerbabuena (Barbate)", lat:36.1868, lon:-5.9196 },
+        { name:"La Cortadura (Cádiz)", lat:36.4941, lon:-6.2697 },
+        { name:"Los Caños de Meca (Barbate)", lat:36.1934, lon:-6.0312 },
+        { name:"Zahara de los Atunes (Barbate)", lat:36.1345, lon:-5.8456 },
+        { name:"Tarifa - Los Lances", lat:36.0134, lon:-5.6089 },
+        { name:"Conil - Castilnovo", lat:36.2789, lon:-6.1234 },
+        { name:"El Bunker (Tarifa)", lat:36.0089, lon:-5.6234 },
+        { name:"Las Tres Piedras (Chipiona)", lat:36.7423, lon:-6.4312 },
+        { name:"Cabo de Gata (Almería)", lat:36.7234, lon:-2.1989 }
+      ],
+      "Illes Balears": [
+        { name:"Son Serra (Mallorca)", lat:39.7079, lon:3.2254 },
+        { name:"Cala Mesquida (Mallorca)", lat:39.7405, lon:3.4390 },
+        { name:"Es Trenc (Mallorca)", lat:39.3567, lon:2.9789 },
+        { name:"Cala Millor (Mallorca)", lat:39.5912, lon:3.3845 }
+      ],
+      "Canarias": [
+        { name:"El Quemao (Lanzarote)", lat:29.1299, lon:-13.6147 },
+        { name:"Famara (Lanzarote)", lat:29.1235, lon:-13.5600 },
+        { name:"El Confital (Gran Canaria)", lat:28.1598, lon:-15.4348 },
+        { name:"La Cicer (Gran Canaria)", lat:28.1340, lon:-15.4495 },
+        { name:"El Socorro (Tenerife)", lat:28.4212, lon:-16.5721 },
+        { name:"Las Américas (Tenerife)", lat:28.0523, lon:-16.7289 },
+        { name:"Las Galletas (Tenerife)", lat:28.0089, lon:-16.6534 },
+        { name:"El Cotillo (Fuerteventura)", lat:28.6889, lon:-14.0012 },
+        { name:"Majanicho (Fuerteventura)", lat:28.7345, lon:-13.9234 }
+      ],
+      "Ceuta": [
+        { name:"Playa del Chorrillo", lat:35.8875, lon:-5.3133 }
+      ],
+      "Melilla": [
+        { name:"Playa de los Cárabos", lat:35.2790, lon:-2.9549 }
+      ]
+    };
+
+    const API_SOURCES = {
+      openMeteo: true,
+      stormGlass: false
+    };
+
+    async function fetchOpenMeteo(lat, lon){
+      const url = new URL('https://marine-api.open-meteo.com/v1/marine');
+      url.searchParams.set('latitude', lat.toFixed(4));
+      url.searchParams.set('longitude', lon.toFixed(4));
+      url.searchParams.set('hourly', 'wave_height,wave_period,wind_wave_height,swell_wave_height');
+      url.searchParams.set('forecast_days','4');
+      url.searchParams.set('timezone','auto');
+      
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 10000);
+      
+      try{
+        const res = await fetch(url, { cache:'no-store', signal: controller.signal });
+        clearTimeout(timeout);
+        if(!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        
+        if(!data?.hourly?.wave_height?.length || !data?.hourly?.wave_period?.length){
+          throw new Error('Sin datos de oleaje');
+        }
+        
+        return {
+          source: 'Open-Meteo',
+          data: data,
+          quality: 'high'
+        };
+      }finally{
+        clearTimeout(timeout);
+      }
+    }
+
+    async function fetchMarine(lat, lon){
+      if(API_SOURCES.openMeteo){
+        try{
+          return await fetchOpenMeteo(lat, lon);
+        }catch(err){
+          console.warn('Open-Meteo falló:', err.message);
+        }
+      }
+      
+      console.log('Buscando en celdas cercanas...');
+      const offsets = [
+        [0.02, 0], [-0.02, 0], [0, 0.02], [0, -0.02],
+        [0.02, 0.02], [0.02, -0.02], [-0.02, 0.02], [-0.02, -0.02]
+      ];
+      
+      for(const [dy, dx] of offsets){
+        try{
+          const result = await fetchOpenMeteo(lat + dy, lon + dx);
+          result.adjusted = true;
+          return result;
+        }catch(err){
+          continue;
+        }
+      }
+      
+      throw new Error('Sin datos en todas las fuentes');
+    }
+
+    function scorePoint(h, p, w){
+      return (h*0.7 + p*0.3) - (w*0.12);
+    }
+
+    function bestHour(apiResult){
+      let hours = [];
+      
+      if(apiResult.source === 'Open-Meteo'){
+        const H = apiResult.data.hourly;
+        for(let i=0; i<H.time.length; i++){
+          hours.push({
+            time: H.time[i],
+            height: H.wave_height?.[i] ?? 0,
+            period: H.wave_period?.[i] ?? 0,
+            wind: 0,
+            swell: H.swell_wave_height?.[i] ?? 0
+          });
+        }
+      }
+      
+      const surfableHours = hours.filter(h => {
+        const date = new Date(h.time);
+        const hour = date.getHours();
+        return hour >= 6 && hour <= 20;
+      });
+      
+      if(surfableHours.length === 0) {
+        throw new Error('Sin horas de luz disponibles');
+      }
+      
+      let best = { idx:0, score:-Infinity };
+      for(let i=0; i<surfableHours.length; i++){
+        const h = surfableHours[i];
+        const score = scorePoint(h.height, h.period, h.wind);
+        if(score > best.score){
+          best = { idx:i, score };
+        }
+      }
+      
+      const b = surfableHours[best.idx];
+      return {
+        time: b.time,
+        height: +b.height,
+        period: +b.period,
+        wind: +b.wind,
+        swell: +b.swell,
+        source: apiResult.source,
+        adjusted: apiResult.adjusted || false
+      };
+    }
+
+    function qualityTag(h,p,w){
+      const s = scorePoint(h,p,w);
+      if(s >= 1.6) return { cls:'q-good', label:'Buena' };
+      if(s >= 0.8) return { cls:'q-ok',   label:'Aceptable' };
+      return { cls:'q-bad', label:'Floja' };
+    }
+
+    function moonPhase(date=new Date()){
+      const y = date.getUTCFullYear(), m = date.getUTCMonth()+1, d = date.getUTCDate();
+      let r = y % 100; r %= 19; if (r>9) r -= 19;
+      r = ((r*11) % 30) + m + d;
+      if (m<3) r += 2;
+      const phase = (r < 0 ? r + 30 : r) % 30;
+      const idx = Math.round((phase/29.53)*7) % 8;
+      const names = ['Nueva','Creciente fina','Cuarto creciente','Gibosa creciente','Llena','Gibosa menguante','Cuarto menguante','Menguante fina'];
+      return names[idx];
+    }
+
+    function fmtHour(iso){
+      try{
+        const d = new Date(iso);
+        const day = d.toLocaleDateString('es-ES', { weekday: 'short' });
+        const date = d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' });
+        const time = d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+        return `${day} ${date} ${time}`;
+      }catch{ return iso||'—' }
+    }
+
+    function updateModelsForRegion(ccaa) {
+      const spots = SPOTS[ccaa];
+      
+      if (!spots || spots.length === 0) {
+        document.getElementById('modelsSection').style.display = 'none';
+        return;
+      }
+      
+      document.getElementById('heroImage').style.display = 'none';
+      
+      const centerLat = spots.reduce((sum, s) => sum + s.lat, 0) / spots.length;
+      const centerLon = spots.reduce((sum, s) => sum + s.lon, 0) / spots.length;
+      
+      const windyWavesUrl = `https://embed.windy.com/embed2.html?lat=${centerLat.toFixed(2)}&lon=${centerLon.toFixed(2)}&detailLat=${centerLat.toFixed(2)}&detailLon=${centerLon.toFixed(2)}&width=650&height=450&zoom=8&level=surface&overlay=waves&product=ecmwf&menu=&message=&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default&radarRange=-1`;
+      
+      const windyWindUrl = `https://embed.windy.com/embed2.html?lat=${centerLat.toFixed(2)}&lon=${centerLon.toFixed(2)}&detailLat=${centerLat.toFixed(2)}&detailLon=${centerLon.toFixed(2)}&width=650&height=450&zoom=8&level=surface&overlay=wind&product=ecmwf&menu=&message=&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default&radarRange=-1`;
+      
+      const windyForecastUrl = `https://embed.windy.com/embed2.html?lat=${centerLat.toFixed(2)}&lon=${centerLon.toFixed(2)}&detailLat=${centerLat.toFixed(2)}&detailLon=${centerLon.toFixed(2)}&width=650&height=450&zoom=8&level=surface&overlay=waves&product=ecmwf&menu=&message=true&marker=&calendar=now&pressure=&type=forecast&location=coordinates&detail=true&metricWind=m%2Fs&metricTemp=%C2%B0C&radarRange=-1`;
+      
+      document.getElementById('windyWaves').src = windyWavesUrl;
+      document.getElementById('windyWind').src = windyWindUrl;
+      document.getElementById('windyForecast').src = windyForecastUrl;
+      
+      document.getElementById('modelsSection').style.display = 'block';
+      
+      if(ccaa === 'Región de Murcia') {
+        document.getElementById('webcamSection').style.display = 'block';
+      } else {
+        document.getElementById('webcamSection').style.display = 'none';
+      }
+    }
+
+    async function analyze(){
+      const ccaa = document.getElementById('ccaa').value;
+      const wrap = document.getElementById('resultsWrap');
+      const tbody = document.querySelector('#results tbody');
+      tbody.innerHTML = '';
+      wrap.hidden = true;
+
+      if(!ccaa || !SPOTS[ccaa] || SPOTS[ccaa].length===0){
+        alert('Selecciona una comunidad con spots.'); return;
+      }
+      
+      updateModelsForRegion(ccaa);
+
+      document.getElementById('moon').textContent = 'Luna: ' + moonPhase();
+      document.getElementById('updated').textContent = 'Actualizado: ' + new Date().toLocaleString('es-ES');
+
+      for(const spot of SPOTS[ccaa]){
+        try{
+          await new Promise(r => setTimeout(r, 400));
+          const apiResult = await fetchMarine(spot.lat, spot.lon);
+          const b = bestHour(apiResult);
+          const q = qualityTag(b.height, b.period, b.wind);
+          
+          const sourceIcon = b.source === 'StormGlass' ? '⭐' : '🌊';
+          const adjustedNote = b.adjusted ? ' (celda cercana)' : '';
+          const isFav = isFavorite(spot.name);
+          
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><span class="fav-btn ${isFav?'active':''}" data-spot="${spot.name}">${isFav?'⭐':'☆'}</span></td>
+            <td>${spot.name} ${sourceIcon}${adjustedNote}</td>
+            <td>${b.height.toFixed(2)}</td>
+            <td>${b.period.toFixed(1)}</td>
+            <td>${fmtHour(b.time)}</td>
+            <td><span class="quality ${q.cls}">${q.label}</span></td>
+          `;
+          tbody.appendChild(tr);
+        }catch(err){
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><span class="fav-btn" data-spot="${spot.name}">☆</span></td>
+            <td>${spot.name}</td>
+            <td colspan="4" style="color:#ff9a9a">⚠️ ${err.message || 'Sin datos'}</td>
+          `;
+          tbody.appendChild(tr);
+        }
+      }
+      
+      document.querySelectorAll('.fav-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const spotName = e.target.dataset.spot;
+          toggleFavorite(spotName);
+          e.target.classList.toggle('active');
+          e.target.textContent = e.target.classList.contains('active') ? '⭐' : '☆';
+          loadFavorites();
+        });
+      });
+      
+      wrap.hidden = false;
+    }
+
+    async function loadFavorites() {
+      const favs = getFavorites();
+      const favsSection = document.getElementById('favoritesSection');
+      const favsTbody = document.querySelector('#favoritesTable tbody');
+      
+      if(favs.length === 0) {
+        favsSection.style.display = 'none';
+        return;
+      }
+      
+      favsTbody.innerHTML = '';
+      favsSection.style.display = 'block';
+      
+      for(const favName of favs) {
+        let spot = null;
+        let ccaa = null;
+        
+        for(const [region, spots] of Object.entries(SPOTS)) {
+          const found = spots.find(s => s.name === favName);
+          if(found) {
+            spot = found;
+            ccaa = region;
+            break;
+          }
+        }
+        
+        if(!spot) continue;
+        
+        try{
+          await new Promise(r => setTimeout(r, 400));
+          const apiResult = await fetchMarine(spot.lat, spot.lon);
+          const b = bestHour(apiResult);
+          const q = qualityTag(b.height, b.period, b.wind);
+          
+          const sourceIcon = b.source === 'StormGlass' ? '⭐' : '🌊';
+          const adjustedNote = b.adjusted ? ' (celda cercana)' : '';
+          
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><span class="fav-btn active" data-spot="${spot.name}">⭐</span></td>
+            <td>${spot.name} ${sourceIcon}${adjustedNote}</td>
+            <td>${b.height.toFixed(2)}</td>
+            <td>${b.period.toFixed(1)}</td>
+            <td>${fmtHour(b.time)}</td>
+            <td><span class="quality ${q.cls}">${q.label}</span></td>
+          `;
+          favsTbody.appendChild(tr);
+        }catch(err){
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><span class="fav-btn active" data-spot="${spot.name}">⭐</span></td>
+            <td>${spot.name}</td>
+            <td colspan="4" style="color:#ff9a9a">⚠️ ${err.message || 'Sin datos'}</td>
+          `;
+          favsTbody.appendChild(tr);
+        }
+      }
+      
+      document.querySelectorAll('#favoritesTable .fav-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const spotName = e.target.dataset.spot;
+          toggleFavorite(spotName);
+          loadFavorites();
+        });
+      });
+    }
+
+    window.addEventListener('DOMContentLoaded', loadFavorites);
+
+    document.getElementById('go').addEventListener('click', analyze);
+    document.getElementById('reset').addEventListener('click', ()=>{
+      document.querySelector('#results tbody').innerHTML = '';
+      document.getElementById('resultsWrap').hidden = true;
+      document.getElementById('modelsSection').style.display = 'none';
+      document.getElementById('webcamSection').style.display = 'none';
+      document.getElementById('heroImage').style.display = 'block';
+    });
+  </script>
+</body>
+</html>
